@@ -1,0 +1,274 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <title>Dashboard</title>
+    <style>
+        .validation{
+          display:none;
+          color:red;
+          font-size:11px;
+        }
+
+        .form-inline .form-control {
+            display: inline-block;
+            width: auto;
+            vertical-align: middle;
+        }
+      </style>
+
+      <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  </head>
+  <body>
+      {% csrf_token %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/dashboard_page">StudentCRUD operation</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarScroll" aria-controls="navbarScroll" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarScroll">
+          <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll" style="--bs-scroll-height: 100px;">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/dashboard_page">Home</a>
+            </li>
+
+          </ul>
+          <ul class="d-flex">
+            <li class="nav-item">
+              {% if request.session.email %}
+              <a class="nav-link "><b>Welcome, {{ request.session.email }}</b></a>
+              {% endif %}
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="{% url 'user_logout' %}">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+<!-- This is body part of the dashboard -->
+<div class="container mt-5">
+  <h2 class="text-center alert alert-danger">Django Function Based StudentProject</h2>
+   <div class="row">
+    <div class="col-sm-4">
+      <div class="text-center alert alert-info"><h4>Add/Update Student</h4></div>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="stuid" id="stuid">
+          <label class="sr-only">First Name :</label>
+          <input type="text" class="form-control" id="first_nameid" placeholder="First Name"/>
+          <div><span style="display:none;color:red;font-size:14px;" id="firstnamemsg">Please Enter First name</span></div>
+
+          <label class="sr-only">Last Name :</label>
+          <input type="text" class="form-control" id="last_nameid" placeholder="Last Name"/>
+          <div><span style="display:none;color:red;font-size:14px;" id="lastnamemsg">Please Enter last name</span></div>
+
+          <label class="sr-only">Age :</label>
+          <input type="number" class="form-control" id="ageid" placeholder="Age" required />
+          <div><span style="display:none;color:red;font-size:14px;" id="agemsg">Please Enter age</span></div>
+
+          <label class="sr-only">Mobile :</label>
+          <input type="text" class="form-control" id="mobileid" placeholder="Mobile" required />
+          <div><span style="display:none;color:red;font-size:14px;" id="mobilemsg">Please Enter mobile</span></div>
+
+          <label class="sr-only">Department :</label>
+          <select name="dept" id="deptid" class="form-control">
+          {% for d in dept %}
+            <option value="{{d.id}}">{{d.dept_name}}</option>
+          {% endfor %}
+          </select>
+
+          <input type="button" class="btn btn-success" id="btnsave" value="Save" style="margin-top: 8px;" onclick="save_data()"/>
+        </form>
+        <div id="msg" class="alert alert-danger" style='display:none'></div>
+    </div>
+
+    <div class="col-sm-7">
+      <h4 class="text-center alert alert-info">Show Information </h4>
+      <center>
+      <section id="getevent" class="event">
+        <div class="row">
+            <div class="wrap-contact100" >
+
+              <hr>
+              <div id="table_div">
+
+              </div>
+              <div id="tbody">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th scope="col">ID</th>
+                      <th scope="col">First Name</th>
+                      <th scope="col">Last Name</th>
+                      <th scope="col">Age</th>
+                      <th scope="col">Mobile</th>
+                      <th scope="col">Department</th>
+                      <th scope="col">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody">
+                    {% for st in stud_data %}
+                    <tr>
+                      <td>{{st.id}}</td>
+                      <td>{{st.st_first_name}}</td>
+                      <td>{{st.st_last_name}}</td>
+                      <td>{{st.st_age}}</td>
+                      <td>{{st.st_mobile}}</td>
+                      <td>{{st.st_fk_dept}}</td>
+                      <td>
+                        <input type="button" data-sid="{{st.id}}" class="btn btn-warning btn-sm btn-edit" value="Edit" />
+                        <input type="button" data-sid="{{st.id}}" class="btn btn-danger btn-sm btn-del" value="Delete" />
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+        </div>
+      </section>
+<!-- Coding for pagination -->
+    <!-- <div class="dataTables_info" id="test_info" role="status" aria-live="polite">Showing 1 to 4 entries</div> -->
+      <div class="paginate_button previous disabled">
+        <span>
+          {% if page_obj.has_previous %}
+           <a class="paginate_button previous disabled" area-controls="test" data-dt-idx="0" tabindex="-1" href="?page={{page_obj.previous_page_number}}">Previous</a>
+          {% endif %}
+
+
+          {% if page_obj.has_next %}
+           <a class="paginate_button next" aria-controls="test" data-dt-idx="1" href="?page={{page_obj.next_page_number}}">Next</a>
+          {% endif %}
+        </span>
+      </div>
+
+      </div>
+    </div>
+  </div>
+ </body>
+</html>
+<script type="text/javascript">
+
+  $('#first_nameid').change(function(){
+     $('#firstnamemsg').hide();
+   })
+   $('#last_nameid').change(function(){
+      $('#lastnamemsg').hide();
+    })
+    $('#ageid').change(function(){
+       $('#agemsg').hide();
+     })
+     $('#mobileid').change(function(){
+        $('#mobilemsg').hide();
+      })
+
+  function save_data(){
+    console.log("Save");
+    let output = "";
+     let sid=$("#stuid").val();
+     let fn=$("#first_nameid").val();
+     let ln=$("#last_nameid").val();
+     let age=$("#ageid").val();
+     let mb=$('#mobileid').val();
+     let d=$('#deptid').val();
+
+     if (fn == ""){
+       $('#firstnamemsg').show();
+     }
+    else if(ln==""){
+      $('#lastnamemsg').show();
+    }else if(age==""){
+      $('#agemsg').show();
+    }else if(mb==""){
+      $('#mobilemsg').show();
+    }
+    else{
+        $.ajax({
+          method : "POST",
+          url : "/save_student_ajax/",
+          data : {
+            'sid':sid,
+            'fn':fn,
+            'ln':ln,
+            'age':age,
+            'mb':mb,
+            'dept':d,
+          },
+          success : function(data){
+            if (data.status == "Save"){
+              swal("Data Successfully saved!!!", {
+                icon: "success",
+                button: "Ok",
+                closeOnClickOutside: false,
+              }).then(function() {
+                location.href = "{% url 'dashboard_page' %}";
+              });
+            }
+        else if(response == "invalid"){
+          swal("Data not saved...", {
+            icon: "warning",
+            button: "Ok",
+            closeOnClickOutside: false,
+          }).then(function() {
+            location.reload();
+          });
+        }
+      }
+    })
+  }
+}
+
+// Edit data
+$("tbody").on("click", ".btn-edit", function(){
+  let id = $(this).attr("data-sid");
+  let csr = $("input[name=csrfmiddlewaretoken]").val();
+  mydata = {sid:id, csrfmiddlewaretoken: csr};
+  console.log("into the edit ajax");
+  $.ajax({
+    url:"{% url 'edit_data' %}",
+    method: "POST",
+    data: mydata,
+    success:function(data){
+      $("#stuid").val(data.id);
+      $("#first_nameid").val(data.fname);
+      $("#last_nameid").val(data.lname);
+      $("#ageid").val(data.age);
+      $("#mobileid").val(data.mobile);
+    },
+  });
+});
+
+//Delete data
+$("tbody").on("click", ".btn-del", function(){
+  console.log('inside delete button is called');
+  let id = $(this).attr("data-sid");
+  let csr = $("input[name=csrfmiddlewaretoken]").val();
+  mydata = {sid:id, csrfmiddlewaretoken: csr};
+  mythis = this;
+  $.ajax({
+    url:"{% url 'delete' %}",
+    method: "POST",
+    data: mydata,
+    success:function(data){
+      // console.log(data);
+      if(data.status == 1){
+        $('#msg').text("Data deleted Successfully..");
+        $('#msg').show();
+        $(mythis).closest("tr").fadeOut();
+      }
+      if(data.status == 0){
+        $('#msg').text("Unable to delete data");
+        $('#msg').show();
+      }
+    },
+  });
+});
+</script>
